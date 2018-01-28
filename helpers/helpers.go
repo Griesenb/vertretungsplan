@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 	"github.com/fronbasal/vertretungsplan/structs"
+	"fmt"
 )
 
 func Request(url string) (*http.Response, error) {
@@ -34,20 +35,20 @@ func LoadCredentials() structs.Credentials {
 }
 
 func IServLogin(username, password string) (error, bool) {
-	body := strings.NewReader(`_username=` + username + `&_password=` + password)
-	req, err := http.NewRequest("POST", "https://steinbart-gym.eu/iserv/login_check", body)
+	s := fmt.Sprintf("login_act=%s&login_pwd=%s", username, password)
+	body := strings.NewReader(s)
+	req, err := http.NewRequest("POST", "https://steinbart-gym.eu/idesk/index.php", body)
 	if err != nil {
+		fmt.Println(err)
 		return err, false
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
+		fmt.Println(err)
 		return err, false
 	}
 	defer resp.Body.Close()
-	location, err := resp.Location()
-	if err != nil {
-		return err, false
-	}
-	return nil, location.Path == "/iserv"
+	fmt.Println(resp.StatusCode)
+	return nil, resp.StatusCode == 302
 }
